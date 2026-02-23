@@ -6,7 +6,7 @@ import (
 
 	"countryinfo/handlers"
 )
-
+//test
 // API endpoints
 const (
 	restCountriesAPI = "http://129.241.150.113:8080/v3.1/"
