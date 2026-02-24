@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 )
-
+//message for if no endpoint is used
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w,
 		"this is my assignment 1 cloud spring 2026. code is two letter code for a country no = norway \n\n"+

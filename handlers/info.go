@@ -10,14 +10,13 @@ import (
 )
 
 func InfoHandler(w http.ResponseWriter, r *http.Request) {
-	// Get country name from query parameter
-	// Extract country code from URL: /countryinfo/v1/info/{code} 
+	// Get country name from url
     parts := strings.Split(r.URL.Path, "/")
     countryCode := parts[4]
     if len(parts) < 5 || len(countryCode) != 2 {
         w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusBadRequest)
-        json.NewEncoder(w).Encode(map[string]string{"error": "two-letter country code required"})
+        json.NewEncoder(w).Encode(map[string]string{"error": "country code required"})
         return
     }
 
@@ -33,7 +32,7 @@ func InfoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	// Check response status
+	// Check if response error
 	if resp.StatusCode != http.StatusOK {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(resp.StatusCode)
@@ -51,7 +50,7 @@ func InfoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    // Unmarshal into your model
+    // Parse the response
     var data []models.RestCountry
     if err := json.Unmarshal(body, &data); err != nil || len(data) == 0 {
         log.Printf("Error parsing country data: %v", err)
@@ -62,7 +61,6 @@ func InfoHandler(w http.ResponseWriter, r *http.Request) {
 
     c := data[0]
 
-    // Build your trimmed response
     result := models.CountryInfoResponse{
         Name:       c.Name.Common,
         Continents: c.Continents,
@@ -74,11 +72,11 @@ func InfoHandler(w http.ResponseWriter, r *http.Request) {
         Capital:    firstOrEmpty(c.Capital),
     }
 
-    // Return only the relevant fields
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(result)
 }
 
+//for getting the first capital only
 func firstOrEmpty(arr []string) string {
     if len(arr) > 0 {
         return arr[0]

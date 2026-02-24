@@ -9,16 +9,16 @@ import (
 )
 
 func ExchangeHandler(w http.ResponseWriter, r *http.Request) {
-
+	//getting country code from url
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < 5 || len(parts[4]) != 2 {
-		http.Error(w, `{"error":"two-letter country code required"}`, http.StatusBadRequest)
+		http.Error(w, `{"error":"country code required"}`, http.StatusBadRequest)
 		return
 	}
 
 	countryCode := strings.ToUpper(parts[4])
 
-	// Fetch main country
+	// Fetch info main country
 	url := "http://129.241.150.113:8080/v3.1/alpha/" + countryCode
 	resp, err := http.Get(url)
 	if err != nil {
@@ -27,6 +27,7 @@ func ExchangeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
+	//check response ok
 	if resp.StatusCode != http.StatusOK {
 		http.Error(w, `{"error":"country not found"}`, http.StatusNotFound)
 		return
@@ -40,14 +41,14 @@ func ExchangeHandler(w http.ResponseWriter, r *http.Request) {
 
 	country := countryData[0]
 
-	// Extract base currency
+	// Extract main currency
 	var baseCurrency string
 	for code := range country.Currencies {
 		baseCurrency = code
 		break
 	}
 
-	// Fetch base currency table ONCE
+	// Fetch base currency rates
 	baseURL := "http://129.241.150.113:9090/currency/" + baseCurrency
 	baseResp, err := http.Get(baseURL)
 	if err != nil || baseResp.StatusCode != http.StatusOK {
@@ -65,8 +66,10 @@ func ExchangeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//saves all exchange rates for the base currency to later extract relevant ones
 	var baseMap map[string]float64
 
+	//made with AI
 	// Case 1: {"base":"NOK","rates":{...}}
 	if rates, ok := raw["rates"].(map[string]interface{}); ok {
 		baseMap = make(map[string]float64)
@@ -77,6 +80,7 @@ func ExchangeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//made with AI
 	// Case 2: {"NOK":{"SEK":0.98,...}}
 	if baseMap == nil {
 		if inner, ok := raw[baseCurrency].(map[string]interface{}); ok {
